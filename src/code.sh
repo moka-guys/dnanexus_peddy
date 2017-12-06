@@ -37,19 +37,21 @@ function install_app_dependencies {
 
 ############### Functions ###############
 
-# Renames sample in vcf header from 1 to the filename. As currently all
-# vcfs produced by pipeline has Sample header set to 1
+# Rename sample name in the vcf header to the filename (without extension string). 
+# Currently, VCFs produced by mokapipe pipeline have the sample name set to 1 in the vcf header. 
 function rename_vcf_header {
+    # Usage: rename_vcf_header file.vcf.gz
+
     # Use mktemp to create a temp file
     tmp=$(mktemp -t temp.XXX)
-    # Copy vcf file name called by function into temp file. VCF file extension is removed using
-    # ${string%%substring}, where '%%' deletes the longest match of 'substring' the end of $string
+    # Write vcf file name to temp file. File extensions are removed using ${string%%substring}, 
+    # where '%%' deletes the longest match of 'substring' from the end of $string.
+    # This is required as Peddy does not accept '.' characters in sample names. 
     echo ${1%%\.*} > $tmp
-    # Use bcftools to change sample name in header to match file name
+    # Use bcftools to change sample name in vcf header to match file name
     bcftools reheader -s $tmp $1 > temp.$1
     mv temp.$1 $1
-    # Use bcftools to create index for updated vcf file which is required for 
-    # bcftools merge
+    # Use bcftools to create index for updated vcf file which is required for bcftools merge
     bcftools index $1
 }
 
@@ -63,20 +65,23 @@ function batch_rename_vcf_header {
 
 # Create a single FAM file that describes the pedigree of all samples.
 # FAM files are tab-delimited files with a record for each of the following headings:
-#     Family_ID [string], Individual_ID [string], Father_ID [string], 
-#     Mother_ID [string], Sex [integer], Phenotype (optional) [float]
-# Note: Father_ID, Mother_ID, or Sex of 0 = Unknown
+#     Family_ID [string] \t Individual_ID [string] \t Father_ID [string] \t 
+#     Mother_ID [string] \t Sex [integer] \t Phenotype (optional) [float]
+# Note: Father_ID, Mother_ID, or Sex of 0 = Unknown. Individual_ID cannot be 0.
 function create_fam_file {
     # Set string with FAM file name using project folder title
     fam_file="ped.${project_for_peddy}.fam"
     # Create empty fam file. The null operator (:) is redirected to a file, named using $fam_file.
     # This ensures an empty FAM file is created for writing to, even if it already exists
     :> $fam_file
+    # Set a counter to use as the family ID. This will correspond with the line number for each record.
+    fam_ID=0
 
     # Loop over vcfs and extract data for fam file entry
     for file in *vcf.gz; do
         # Extract sample sex from file name
         sex=$(echo $file | sed -n 's/.*_\([M,F]\)_.*/\1/p')
+
         # Convert into sex code used by peddy
         # Sex code ('1' = male, '2' =female. '0' = unknown)
         if [[ $sex == "M" ]]; then
@@ -86,14 +91,13 @@ function create_fam_file {
         else
             sex_code="0" #Unknown sex
         fi
+
         # Extract sample name from file name
         sample_name=${file%%\.*} # TODO: Currently just uses the file name, use actual sample name?
-        # Generate 10-character random string as a unique family ID for each vcf:
-        # `cat/dev/urandom` creates a pseudo-random stream of characters, which is limited to alpha-
-        # numeric characters using `tr -dc '[:alnum:]', and limited to 10 characters using `head -c 10`
-        famid=$(echo $(cat /dev/urandom | tr -dc '[:alnum:]' | head -c 10))
+        # Increment the family ID counter
+        fam_ID=$((fam_ID+1))
         # Write out line to FAM file in tab delimited format
-        echo -e "$famid\t$sample_name\t0\t0\t$sex_code\t2" >> $fam_file
+        echo -e "FAM$fam_ID\t$sample_name\t0\t0\t$sex_code\t2" >> $fam_file
     done
 }
 

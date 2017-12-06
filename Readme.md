@@ -14,24 +14,24 @@ This project must have a folder 'QC' within the root of the project.
 The filename of each sample must include the gender as 'M' or 'F' deliminated by underscores.
 
 ## What does this app output?
-Several files prefixed with peddy_ and the run number (*) are produced. MultiQC uses 4 of these files:
-1. peddy_*.peddy.ped
-2. peddy_*.het_check.csv
-3. peddy_*.ped_check.csv
-4. peddy_*.sex_check.csv
+Several files prefixed with 'ped.' are produced. MultiQC uses 4 of these files:
+1. ped.peddy.ped
+2. ped.het_check.csv
+3. ped.ped_check.csv
+4. ped.sex_check.csv
 
-The rest are unused by the pipeline:
+Files 1-4 are placed in /QC/. The remaining files are unused by the pipeline:
 
-5. peddy_*.background_pca.json
-6. peddy_*.het_check.png
-7. peddy_*.html
-8. peddy_*.pca_check.png
-9. peddy_*.ped_check.png
-10. peddy_*.ped_check.rel-difference.csv
-11. peddy_*.sex_check.png
-12. peddy_*.vs.html
+5. ped.background_pca.json
+6. ped.het_check.png
+7. ped.html
+8. ped.pca_check.png
+9. ped.ped_check.png
+10. ped.ped_check.rel-difference.csv
+11. ped.sex_check.png
+12. ped.*project_name*.fam
 
-The outputs are placed in /QC/multiqc
+Files 5-12 are placed in /QC/peddy_extra/
 
 ## How does this app work?
 * The app parses the file names to determine the sex assigned to each of the samples and creates a fam file (https://www.cog-genomics.org/plink2/formats#fam) containing this information.  It then creates a merged vcf from the run's 'vcfs and passes the merged vcf and fam file to peddy.  peddy checks that the assigned gender matches the sample and for duplicate samples and saves this data in /QC/multiqc so that the MultiQC app can include this info in the end of the run report.
