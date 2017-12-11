@@ -93,7 +93,7 @@ function create_fam_file {
         fi
 
         # Extract sample name from file name
-        sample_name=${file%%\.*} # TODO: Currently just uses the file name, use actual sample name?
+        sample_name=${file%%\.*} #Currently just uses the file name, use actual sample name?
         # Increment the family ID counter
         fam_ID=$((fam_ID+1))
         # Write out line to FAM file in tab delimited format
@@ -103,19 +103,16 @@ function create_fam_file {
 
 # Create a merged VCF from all the VCFs listed in the specified folder using bcftools 
 # (https://vcftools.github.io/htslib.html#merge).
-# TODO: Specify merged vcf name using project name rather than hard coding
+
 function merge_vcfs {
     #merge all vcfs in separate vcf (options: -O z compressed vcf, -O v for uncompressed)
-    bcftools merge -O z -o merged.vcf.gz *.vcf.gz
-    bcftools index merged.vcf.gz
+    bcftools merge -O z -o "${1}_merged.vcf.gz *.vcf.gz" #Uses argument provided to function as prefix for created file
+    bcftools index "${1}_merged.vcf.gz"
 }
 
 ############### Run Program ###############
 
 main(){
-# Detect when variant calling has finished before running script:
-    #TODO: Copy-and-paste relevant code from MultiQC App which detects when run has
-    #finished
 
 # Read the api key as a variable
 API_KEY=$(cat '/home/dnanexus/auth_key')
@@ -130,24 +127,23 @@ install_app_dependencies
 # Run functions to prepare files for input into peddy
 create_fam_file
 batch_rename_vcf_header
-merge_vcfs
+merge_vcfs "${project_for_peddy}" #Supply project name prefix for created file
 
 # Run Peddy using the merged VCF and the previously created ped/fam file saving
 # the output in the QC folder alongside the output of other QC apps.
-# TODO: add project name to prefix
-peddy --plot -p 4 --prefix ped merged.vcf.gz $fam_file #TODO: remove hard coded vcf name
+
+peddy --plot -p 4 --prefix ped "${project_for_peddy}_merged.vcf.gz" $fam_file 
 
 # Create directories for app outputs to be uploaded to dna nexus.
 mkdir -p $HOME/out/peddy/QC/peddy_extra
 # Move files required by MultiQC to the QC folder
 mv ped.*{peddy.ped,het_check.csv,ped_check.csv,sex_check.csv} $HOME/out/peddy/QC/
-# Move all other files to the foler QC/peddy_extra
+# Move all other files to the folder QC/peddy_extra
 mv ped* $HOME/out/peddy/QC/peddy_extra
+mv *_merged.vcf.gz* $HOME/out/peddy/QC/peddy_extra #includes index file for merged vcf
 
 # Upload all output files to the worker. As per the outputSpec field in the dxapp.json, all files
 # and folders in /home/dnanexus/out/peddy/ are uploaded to the project folder's root directory.
 dx-upload-all-outputs
 
-# TODO: Edit nexus workflow to ensure MultiQC App starts after this app is complete.
-# TODO: Check to see if we need to output logs to loggly
 }
