@@ -106,7 +106,7 @@ function create_fam_file {
 
 function merge_vcfs {
     #merge all vcfs in separate vcf (options: -O z compressed vcf, -O v for uncompressed)
-    bcftools merge -O z -o "${1}_merged.vcf.gz *.vcf.gz" #Uses argument provided to function as prefix for created file
+    bcftools merge -O z -o "${1}_merged.vcf.gz" *.vcf.gz #Uses argument provided to function as prefix for created file
     bcftools index "${1}_merged.vcf.gz"
 }
 
@@ -118,7 +118,7 @@ main(){
 API_KEY=$(cat '/home/dnanexus/auth_key')
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
-dx download $project_for_peddy:output/*vcf.gz --auth $API_KEY
+dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
 dx download $project_for_peddy:output/*vcf.gz.tbi --auth $API_KEY
 
 # Run function to install bcftools and peddy on linux worker
