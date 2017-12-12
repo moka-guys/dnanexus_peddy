@@ -93,8 +93,7 @@ function create_fam_file {
         fi
 
         # Extract sample name from file name
-        sample_name=${file%%\.*} #Currently just uses the file name, use actual sample name?
-        # Increment the family ID counter
+        sample_name=${file%%\.* | sed -e 's/_001$//'} #Sed trims _001 from filename as Multiqc expects this - see multiqc yaml file 
         fam_ID=$((fam_ID+1))
         # Write out line to FAM file in tab delimited format
         echo -e "FAM$fam_ID\t$sample_name\t0\t0\t$sex_code\t2" >> $fam_file
