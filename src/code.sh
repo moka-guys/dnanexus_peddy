@@ -18,13 +18,13 @@ set -e -x -o pipefail
 function install_app_dependencies {
     # Install Miniconda on worker
     bash $HOME/Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
-    # Add conda binaries to system path by prepending ocation to PATH variable
+    # Add conda binaries to system path by prepending location to PATH variable
     export PATH="$HOME/Miniconda/bin:$PATH"
     # Update conda and add 'bioconda' channel. Peddy and bcftools are installed from this channel.
     conda update -y conda
     conda config --add channels bioconda
     # Install bcftools and peddy
-    conda install -y bcftools peddy
+    conda install -y bcftools=1.6 peddy=0.3.1
 }
 
 ############### Functions ###############
@@ -112,9 +112,13 @@ function create_fam_file {
         #
         # The filename is piped to the `sed` substitution command, which has the syntax
         # 's/regular_expression/substitution_string/modifier'.
-        # Here, the 'regular_expression' matches '_M_' or '_F_' anywhere in the filename. The 'M'/'F'
-        # character is captured and passed as the 'substitution_string' using a back-reference (\1).
-        # Finally, the modifier 'p' prints out the matching character, whic is assigned to $sex.
+        # The regular expression used is .*_\([M,F])\)_.* and can be translated as follows:
+        #   Search the filename for an M or F character using '[]'. The character must be flanked by
+        #   underscores which can then be preceeded or followed by any number of any character
+        #   ('.*_' and '_.*' ). Use escaped parthenses '\(' and '\)' to capture the M or F character.
+        # The entire input filename string is then substituted for the captured character using the
+        # backreference syntax (\1). Finally, the modifier 'p' instructs `sed` to print out the
+        # subsituted string, which is assigned to $sex.
         #
         # If no sample sex string is found, the $sex variable is empty and sample sex is set to 'Unknown'.
         sex=$(echo $file | sed -n 's/.*_\([M,F]\)_.*/\1/p')
@@ -173,7 +177,7 @@ create_fam_file
 # produced by mokapipe have a default sample name of '1'.
 batch_rename_vcf_header
 
-# Create a single merged vcf fromm each VCF file, supplying the project name for use as a prefix.
+# Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
 # Run Peddy using the merged VCF and the previously created ped/fam file.

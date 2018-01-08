@@ -1,15 +1,12 @@
 # dnanexus_peddy v 1.0.0
 
 ## What does this app do?
-This app runs peddy (https://github.com/brentp/peddy) to perform a run wide QC checking that the assigned gender matches the sample and that the run does not contain duplicate samples. It uses the sample metadata contained within the samples filenames plus the vcf files created by the pipeline.  
-
-This app uses a release of peddy from https://github.com/moka-guys/peddy
-
-## What are typical use cases for this app?
-The app is designed to be executed after the DNA Nexus workflows for all samples in a run have sucessfuly completed.
-The peddy output files are processed by multiqc >v1.3, which displays peddy data in the resulting report. This app is scheduled to run by the DNA Nexus upload agent script using the --depends-on flag.
+This app runs peddy v0.3.1 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample. This app uses a release of peddy from https://github.com/moka-guys/peddy.
 
 Peddy detects when the expected sex of a sample does not match the sex inferred from the sequence data. This works by measuring the ratio of heterozygous to homozygous genotypes in the X chromosome; As males have one X chromosome, they should have zero true heterozygous calls in the X chromosome, whereas females should have a mixture. This is reported via the  **sex/het ratio**, which is the count of heterozygous calls divided by the count of homozygous alternate calls. The sex/het ratio is **low for males, high for females**.
+
+## What are typical use cases for this app?
+The app should be run after workflows for all samples in a run complete succesfully. The peddy output files are processed by multiqc >v1.3, which displays peddy data in the resulting report. This app is scheduled to run by the DNA Nexus upload agent script using the --depends-on flag.
 
 ## What data are required for this app to run?
 - A project number is passed to the app as a parameter.
