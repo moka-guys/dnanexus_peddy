@@ -1,4 +1,4 @@
-# dnanexus_peddy v 1.0.0
+# dnanexus_peddy v 1.0
 
 ## What does this app do?
 This app runs peddy v0.3.1 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample. This app uses a release of peddy from https://github.com/moka-guys/peddy.
@@ -10,7 +10,8 @@ The app should be run after workflows for all samples in a run complete succesfu
 
 ## What data are required for this app to run?
 - A project number is passed to the app as a parameter.
-- The given project must have an 'output' folder containing VCFs to be processed by peddy. Each vcf must have the extension '.refined.vcf.gz'.
+- The given project must have an 'output' folder containing VCFs to be processed by peddy. 
+- More than one vcf with the extension '.refined.vcf.gz' is required.
 - The filename of each sample must include the gender as 'M' or 'F' deliminated by underscores.
 
 ## What does this app output?
