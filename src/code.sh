@@ -16,10 +16,8 @@ set -e -x -o pipefail
 
 # Install programs required for this app (peddy and bcftools) using conda.
 function install_app_dependencies {
-    #download miniconda from 001
-    dx download project-ByfFPz00jy1fk6PjpZ95F27J:Data/Miniconda/Miniconda2-latest-Linux-x86_64.sh --auth $API_KEY
-    # install miniconda
-    bash Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
+    # Install Miniconda on worker
+    bash $HOME/Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
     # Add conda binaries to system path by prepending location to PATH variable
     export PATH="$HOME/Miniconda/bin:$PATH"
     # Update conda and add 'bioconda' channel. Peddy and bcftools are installed from this channel.
