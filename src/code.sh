@@ -17,7 +17,7 @@ set -e -x -o pipefail
 # Install programs required for this app (peddy and bcftools) using conda.
 function install_app_dependencies {
     #download miniconda from 001
-    dx download project-ByfFPz00jy1fk6PjpZ95F27J:Data/Miniconda/Miniconda2-latest-Linux-x86_64.sh
+    dx download project-ByfFPz00jy1fk6PjpZ95F27J:Data/Miniconda/Miniconda2-latest-Linux-x86_64.sh --auth $API_KEY
     # install miniconda
     bash Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
     # Add conda binaries to system path by prepending location to PATH variable
@@ -162,10 +162,10 @@ function merge_vcfs {
 main(){
 
 # Read the api key as a variable
-#API_KEY=$(cat '/home/dnanexus/auth_key')
+API_KEY=$(cat '/home/dnanexus/auth_key')
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
-dx download $project_for_peddy:output/*.refined.vcf.gz
+dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
 
 # Run function to install bcftools and peddy on linux worker
 install_app_dependencies

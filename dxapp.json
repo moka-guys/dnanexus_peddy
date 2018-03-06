@@ -10,7 +10,6 @@
     "github release": "v1.1"
   },
   "dxapi": "1.0.0",
-  "version": "1.0", 
   "inputSpec": [
     {
       "name": "project_for_peddy",
@@ -50,7 +49,6 @@
   "access": {
     "network": [
       "*"
-    ],
-    "allProjects": "VIEW"
+    ]
   }
 }
