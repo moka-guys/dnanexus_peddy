@@ -56,7 +56,7 @@ function rename_vcf_header {
     # Write VCF filename to temp file.
     echo ${new_sample_name} > $tmp
 
-    # Use bcftools to rename the sample name in vcf header, using the sample name in the temp file.
+    # Use bcftools v1.6 docker container to rename the sample name in vcf header, using the sample name in the temp file.
     # By default `bcftools reheader` writes the edited VCF to the console, but here the result is
     # redirected to the file temp.$vcf_file.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
@@ -66,7 +66,7 @@ function rename_vcf_header {
     # Rename edited VCF using the name of the original VCF, deleting the original in the process.
     mv temp.$vcf_file $vcf_file
 
-    # Use bcftools to create an index for the updated vcf file which will be required by
+    # Use bcftools v1.6 docker container to create an index for the updated vcf file which will be required by
     # `bcftools merge`. The -t flag indexes the file using tabix.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
     dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools index -t /data/${PWD}/$vcf_file
@@ -139,7 +139,7 @@ function merge_vcfs {
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
     dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
-    # Use bcftools to create an index of the merged VCF file, which is required by Peddy.
+    # Use bcftools v1.6 docker container to create an index of the merged VCF file, which is required by Peddy.
     # The -t flag indexes the file using tabix.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
     dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools index -t /data/${PWD}/${1}_merged.vcf.gz
