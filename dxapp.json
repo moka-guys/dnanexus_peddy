@@ -35,6 +35,12 @@
       {
         "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
         "folder": "/Apps/Docker",
+        "name": "quay.io/biocontainers/bcftools:1.6--1",
+        "version": "0.0.1"
+      },
+      {
+        "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
+        "folder": "/Apps/Docker",
         "name": "quay.io/biocontainers/peddy:0.3.1--py27_0",
         "version": "0.0.1"
       }

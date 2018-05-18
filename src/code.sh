@@ -12,21 +12,6 @@
 # and to output each line as it is executed -- useful for debugging
 set -e -x -o pipefail
 
-############### Installations ###############
-
-# Install programs required for this app (peddy and bcftools) using conda.
-function install_app_dependencies {
-    # Install Miniconda on worker
-    bash $HOME/Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
-    # Add conda binaries to system path by prepending location to PATH variable
-    export PATH="$HOME/Miniconda/bin:$PATH"
-    # Update conda and add 'bioconda' channel. bcftools is installed from this channel.
-    conda update -y conda
-    conda config --add channels bioconda
-    # Install bcftools and peddy
-    conda install -y bcftools=1.6
-}
-
 ############### Functions ###############
 
 # Extract the sample name from the VCF filename and print to stdout.
@@ -74,14 +59,17 @@ function rename_vcf_header {
     # Use bcftools to rename the sample name in vcf header, using the sample name in the temp file.
     # By default `bcftools reheader` writes the edited VCF to the console, but here the result is
     # redirected to the file temp.$vcf_file.
-    bcftools reheader -s $tmp $vcf_file > temp.$vcf_file
+    # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+
+    dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools reheader -s /data/$tmp /data/${PWD}/$vcf_file > temp.$vcf_file
 
     # Rename edited VCF using the name of the original VCF, deleting the original in the process.
     mv temp.$vcf_file $vcf_file
 
     # Use bcftools to create an index for the updated vcf file which will be required by
     # `bcftools merge`. The -t flag indexes the file using tabix.
-    bcftools index -t $vcf_file
+    # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+    dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools index -t /data/${PWD}/$vcf_file
 }
 
 # Run rename_vcf_header function on all vcf files in the working directory (/home/dnanexus)
@@ -149,10 +137,12 @@ function merge_vcfs {
     # The option '-O z' produces a compressed vcf, which is named using the '-o' flag.
     # The merged VCF is named using the first function argument (${1}, the DNA Nexus Project name)
     # with the suffix '_merged.vcf.gz'.
-    bcftools merge -O z -o "${1}_merged.vcf.gz" *.vcf.gz 
+    # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+    dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
     # Use bcftools to create an index of the merged VCF file, which is required by Peddy.
     # The -t flag indexes the file using tabix.
-    bcftools index -t "${1}_merged.vcf.gz"
+    # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+    dx-docker run -v /:/data quay.io/biocontainers/bcftools:1.6--1 bcftools index -t /data/${PWD}/${1}_merged.vcf.gz
 }
 
 ############### Run Program ###############
@@ -164,9 +154,6 @@ API_KEY=$(cat '/home/dnanexus/auth_key')
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
 dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
-
-# Run function to install bcftools and peddy on linux worker
-install_app_dependencies
 
 # Run functions to prepare files for input into peddy.
 # Create a single FAM file that describes the sex of all samples. Sex is read from VCF sample names,
@@ -181,8 +168,8 @@ batch_rename_vcf_header
 merge_vcfs "${project_for_peddy}"
 
 # Run Peddy docker container using the merged VCF and the previously created ped/fam file.
-# -v ${PWD}:/data mounts that current working directory to /data within the docker container
-dx-docker run -v ${PWD}:/data quay.io/biocontainers/peddy:0.3.1--py27_0 /bin/bash -c "cd /data; peddy --plot -p 4 --prefix ped ${project_for_peddy}_merged.vcf.gz ${fam_file}" 
+# -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+dx-docker run -v /:/data quay.io/biocontainers/peddy:0.3.1--py27_0 /bin/bash -c "cd /data/${PWD}; peddy --plot -p 4 --prefix ped ${project_for_peddy}_merged.vcf.gz ${fam_file}" 
 
 # Create directories for app outputs to be uploaded to dna nexus.
 mkdir -p $HOME/out/peddy/QC/peddy
