@@ -20,11 +20,11 @@ function install_app_dependencies {
     bash $HOME/Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/Miniconda
     # Add conda binaries to system path by prepending location to PATH variable
     export PATH="$HOME/Miniconda/bin:$PATH"
-    # Update conda and add 'bioconda' channel. Peddy and bcftools are installed from this channel.
+    # Update conda and add 'bioconda' channel. bcftools is installed from this channel.
     conda update -y conda
     conda config --add channels bioconda
     # Install bcftools and peddy
-    conda install -y bcftools=1.6 peddy=0.3.1
+    conda install -y bcftools=1.6
 }
 
 ############### Functions ###############
@@ -180,8 +180,9 @@ batch_rename_vcf_header
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
-# Run Peddy using the merged VCF and the previously created ped/fam file.
-peddy --plot -p 4 --prefix ped "${project_for_peddy}_merged.vcf.gz" $fam_file 
+# Run Peddy docker container using the merged VCF and the previously created ped/fam file.
+# -v ${PWD}:/data mounts that current working directory to /data within the docker container
+dx-docker run -v ${PWD}:/data quay.io/biocontainers/peddy:0.3.1--py27_0 /bin/bash -c "cd /data; peddy --plot -p 4 --prefix ped ${project_for_peddy}_merged.vcf.gz ${fam_file}" 
 
 # Create directories for app outputs to be uploaded to dna nexus.
 mkdir -p $HOME/out/peddy/QC/peddy
