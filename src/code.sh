@@ -149,7 +149,7 @@ function merge_vcfs {
 
 main(){
 # Read the api key as a variable
-API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:auth_key)
+API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
 dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
