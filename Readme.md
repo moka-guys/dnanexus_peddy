@@ -1,4 +1,4 @@
-# dnanexus_peddy v 1.4
+# dnanexus_peddy v 1.5
 
 ## What does this app do?
 This app runs peddy v0.3.1 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.

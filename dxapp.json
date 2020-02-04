@@ -1,13 +1,13 @@
 {
-  "name": "peddy_v1.4",
-  "title": "peddy_v1.4",
-  "summary": "v1.4 - Generates a run-wide QC performing a sex check and checking for duplicate samples",
+  "name": "peddy_v1.5",
+  "title": "peddy_v1.5",
+  "summary": "v1.5 - Generates a run-wide QC performing a sex check and checking for duplicate samples",
   "tags": [
     "QC",
     "Statistics"
   ],
   "properties": {
-    "github release": "v1.4"
+    "github release": "v1.5"
   },
   "dxapi": "1.0.0",
   "inputSpec": [

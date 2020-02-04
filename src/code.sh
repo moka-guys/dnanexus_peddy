@@ -25,12 +25,10 @@ function get_sample_name {
     # first '.' and all following characters in the filename. This is required as peddy does not
     # accept the '.' character in sample names.
     local vcf_file_cut_extension=${vcf_file%%\.*}
-    # Remove trailing '_001' from the end of vcf filename. This done using the `sed` substitution
-    # command and is required as MultiQC expects sample names without _001. See multiqc YAML in app:
-    # dnanexus_multiqc/resources/home/dnanexus/.
-    local vcf_file_cut_001=$(echo ${vcf_file_cut_extension} | sed s'/_001$//')
+    # To prevent multiple rows per sample in the MultiQC report remove everything after _markdup from the sample name using `sed` substitution
+    local vcf_file_cut=$(echo ${vcf_file_cut_extension} | sed s'/_markdup_Haplotyper$/_markdup/')
     # Return cleaned sample name by printing to stdout
-    echo $vcf_file_cut_001
+    echo $vcf_file_cut
 }
 
 # Rename sample name in the vcf header to the filename (without extensions) using `bcftools reheader`.
