@@ -152,7 +152,8 @@ main(){
 API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
-dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
+# First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
+dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
 
 # Run functions to prepare files for input into peddy.
 # Create a single FAM file that describes the sex of all samples. Sex is read from VCF sample names,
