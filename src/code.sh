@@ -73,7 +73,7 @@ function rename_vcf_header {
     # redirected to the file temp.$vcf_file.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
 
-    docker run -v /home/dnanexus:/home/dnanexus "${BCFTOOLS_DOCKER_IMAGE_NAME}" reheader -s /data/$tmp /data/${PWD}/$vcf_file > temp.$vcf_file
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" reheader -s /data/$tmp /data/${PWD}/$vcf_file > temp.$vcf_file
 
     # Rename edited VCF using the name of the original VCF, deleting the original in the process.
     mv temp.$vcf_file $vcf_file
@@ -81,7 +81,7 @@ function rename_vcf_header {
     # Use bcftools v1.6 docker container to create an index for the updated vcf file which will be required by
     # `bcftools merge`. The -t flag indexes the file using tabix.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-    docker run -v /home/dnanexus:/home/dnanexus "${BCFTOOLS_DOCKER_IMAGE_NAME}" index -t /data/${PWD}/$vcf_file
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" index -t /data/${PWD}/$vcf_file
 }
 
 # Run rename_vcf_header function on all vcf files in the working directory (/home/dnanexus)
@@ -150,11 +150,11 @@ function merge_vcfs {
     # The merged VCF is named using the first function argument (${1}, the DNA Nexus Project name)
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-    docker run -v /home/dnanexus:/home/dnanexus "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
     # Use bcftools v1.6 docker container to create an index of the merged VCF file, which is required by Peddy.
     # The -t flag indexes the file using tabix.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-    docker run -v /home/dnanexus:/home/dnanexus "${BCFTOOLS_DOCKER_IMAGE_NAME}" index -t /data/${PWD}/${1}_merged.vcf.gz
+    docker run -v /:/data"${BCFTOOLS_DOCKER_IMAGE_NAME}" index -t /data/${PWD}/${1}_merged.vcf.gz
 }
 
 ############### Run Program ###############
