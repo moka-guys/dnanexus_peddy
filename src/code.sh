@@ -156,7 +156,7 @@ function merge_vcfs {
     
     #docker run -v /home/dnanexus:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -m all -O z -f -o /data/${PWD}/"${1}_merged.vcf.gz" /data/*.vcf.gz
 
-    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" sh -c "mkdir -p /data${PWD} && bcftools merge -m all -O z -f -o /data${PWD}/${1}_merged.vcf.gz /data${PWD}/*.vcf.gz"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -m all -O z -o /data/"${1}_merged.vcf.gz" /data${PWD}/*.vcf.gz
 
     # Use bcftools v1.6 docker container to create an index of the merged VCF file, which is required by Peddy.
     # The -t flag indexes the file using tabix.
