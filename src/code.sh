@@ -150,10 +150,6 @@ function merge_vcfs {
     # The merged VCF is named using the first function argument (${1}, the DNA Nexus Project name)
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-    
-    # Old merge command: 
-    #docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
-    
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         merge -m all -O z -o "/data${PWD}/${1}_merged.vcf.gz" $(printf '/data%s ' "${PWD}"/*.vcf.gz)
 
@@ -202,7 +198,11 @@ rm /home/dnanexus/peddy_v1.6.tar
 
 # Run Peddy docker container using the merged VCF and the previously created ped/fam file.
 # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-docker run -v  /home/dnanexus:/home/dnanexus "${PEDDY_DOCKER_IMAGE_NAME}" -c "cd /data/${PWD}; peddy --plot -p 4 --prefix ped ${project_for_peddy}_merged.vcf.gz ${fam_file}" 
+docker run -v /home/dnanexus:/data "${PEDDY_DOCKER_IMAGE_NAME}" \
+    peddy --plot -p 4 \
+    --prefix /data/ped \
+    /data/${project_for_peddy}_merged.vcf.gz \
+    /data/${fam_file}
 
 # Create directories for app outputs to be uploaded to dna nexus.
 mkdir -p $HOME/out/peddy/QC/peddy
