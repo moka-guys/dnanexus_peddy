@@ -151,9 +151,12 @@ function merge_vcfs {
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
     
-    
+    # Old merge command: 
     #docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
-
+    
+    # Inserting ls command to see if vcf files are where we think they are: 
+    docker run -v "${PWD}:/data" "${BCFTOOLS_DOCKER_IMAGE_NAME}" ls /data/*.vcf.gz
+    
     docker run -v "${PWD}:/data" "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/"${1}_merged.vcf.gz" /data/*.vcf.gz
 
     # Use bcftools v1.6 docker container to create an index of the merged VCF file, which is required by Peddy.
