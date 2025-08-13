@@ -155,8 +155,7 @@ function merge_vcfs {
     #docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/${PWD}/${1}_merged.vcf.gz /data/${PWD}/*.vcf.gz 
     
     # Inserting ls command to see if vcf files are where we think they are: 
-    docker run -v /home/dnanexus:/data -it samtools/bcftools:1.13 /bin/sh -c "ls /data/*.vcf.gz"
-    echo /home/dnanexus/*.vcf.gz
+    docker run -v /home/dnanexus:/data samtools/bcftools:1.13 /bin/sh -c "echo /data/*.vcf.gz"
     
     docker run -v "${PWD}:/data" "${BCFTOOLS_DOCKER_IMAGE_NAME}" merge -O z -o /data/"${1}_merged.vcf.gz" /data/*.vcf.gz
 
