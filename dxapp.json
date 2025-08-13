@@ -2,6 +2,7 @@
   "name": "peddy_v1.6",
   "title": "peddy_v1.6",
   "summary": "v1.6 - Generates a run-wide QC performing a sex check and checking for duplicate samples",
+  "description": "Generates a run-wide QC performing a sex check and checking for duplicate samples",
   "tags": [
     "QC",
     "Statistics"
