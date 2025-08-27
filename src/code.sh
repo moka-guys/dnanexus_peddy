@@ -181,6 +181,23 @@ batch_rename_vcf_header
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
+# Optional BED filtering step 
+if [[ -n "${regions_bed}" ]]; then
+    echo "Applying BED filter using ${regions_bed}"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -R /data/${PWD}/${regions_bed} \
+        -Oz -o /data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz \
+        /data/${PWD}/${project_for_peddy}_merged.vcf.gz
+
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        index -t /data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz
+
+    merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
+else
+    echo "No BED file provided, running on full merged VCF."
+    merged_vcf="${project_for_peddy}_merged.vcf.gz"
+fi
+
 ############### Loading Docker image of Peddy ###############
 
 # Unpack the saved Docker image tarball into a .tar file
@@ -196,7 +213,7 @@ PEDDY_DOCKER_IMAGE_NAME=$(
 # Remove the .tar to save space
 rm /home/dnanexus/peddy_v1.6.tar
 
-# Run Peddy docker container using the merged VCF and the previously created ped/fam file.
+# Run Peddy docker container using the merged & filtered VCF and the previously created ped/fam file.
 # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
 docker run -v /home/dnanexus:/data "${PEDDY_DOCKER_IMAGE_NAME}" \
     peddy --plot -p 4 \
