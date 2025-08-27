@@ -17,6 +17,14 @@
       "label": "project to get quality controlled by peddy",
       "help": "name of project to get processed by peddy",
       "class": "string"
+    },
+    {
+      "name": "regions_bed",
+      "label": "Genomic Regions (BED)",
+      "help": "Optional BED file to restrict analysis to certain regions",
+      "class": "file",
+      "optional": true,
+      "patterns": ["*.bed"]
     }
   ],
   "outputSpec": [
