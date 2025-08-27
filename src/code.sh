@@ -183,14 +183,18 @@ merge_vcfs "${project_for_peddy}"
 
 # Optional BED filtering step 
 if [[ -n "${regions_bed}" ]]; then
-    echo "Applying BED filter using ${regions_bed}"
+    echo "Downloading BED file from DNAnexus..."
+    dx download "$regions_bed" -o regions.bed
+    BED_FILE="regions.bed"
+
+    echo "Applying BED filter using $BED_FILE"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        view -R /data/${PWD}/${regions_bed} \
-        -Oz -o /data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz \
-        /data/${PWD}/${project_for_peddy}_merged.vcf.gz
+        view -R "/data/${PWD}/${BED_FILE}" \
+        -Oz -o "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" \
+        "/data/${PWD}/${project_for_peddy}_merged.vcf.gz"
 
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        index -t /data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz
+        index -t "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz"
 
     merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
 else
