@@ -181,6 +181,10 @@ batch_rename_vcf_header
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
+# Check the first few lines of the merged VCF for formatting 
+echo "First lines of merged VCF:"
+zcat "${project_for_peddy}_merged.vcf.gz" | head -n 5
+
 # Optional BED filtering step 
 if [[ -n "${regions_bed}" ]]; then
     echo "Downloading BED file from DNAnexus..."
@@ -188,6 +192,11 @@ if [[ -n "${regions_bed}" ]]; then
     BED_FILE="regions.bed"
 
     echo "Applying BED filter using $BED_FILE"
+
+    # Print the first few lines of the BED file to make sure it's loaded properly
+    echo "First lines of BED file:"
+    head -n 5 "$regions_bed"
+
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         view -R "/data/${PWD}/${BED_FILE}" \
         -Oz -o "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" \
