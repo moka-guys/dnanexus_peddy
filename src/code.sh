@@ -183,8 +183,10 @@ merge_vcfs "${project_for_peddy}"
 
 # Check the first few lines of the merged VCF for formatting
 echo "First lines of merged VCF:"
+set +e
 docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
     view -h "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | head -n 5
+set -e
 
 # Optional BED filtering step 
 if [[ -n "${regions_bed}" ]]; then
