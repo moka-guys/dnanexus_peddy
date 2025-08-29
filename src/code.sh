@@ -181,27 +181,44 @@ batch_rename_vcf_header
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
-# Check the first few lines of the merged VCF for formatting
-echo "First lines of merged VCF:"
-set +e
-docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-    view -h "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | head -n 5
-set -e
-
 # Optional BED filtering step 
 if [[ -n "${regions_bed}" ]]; then
     echo "Downloading BED file from DNAnexus..."
     dx download "$regions_bed" -o regions.bed
     BED_FILE="regions.bed"
 
-    echo "Applying BED filter using $BED_FILE"
+    # --- normalize BED to proper tabbed, 1-based, sorted 3-column file ---
+    echo "Normalising BED -> regions.normal.bed (tabs, 1-based starts, 3 cols)"
+    # 1) convert multiple spaces to a single tab, 2) use only first 3 fields, 3) add +1 to start (BED->1-based)
+    awk 'BEGIN{OFS="\t"} { gsub(/ +/,"\t"); if($1 ~ /^#/ || NF<3) next; start=$2+1; print $1,start,$3 }' regions.bed \
+        | sed 's/\r$//' \
+        | sort -k1,1 -k2,2n > regions.normal.bed
 
-    # Print the first few lines of the downloaded BED file
-    echo "First lines of BED file:"
-    head -n 5 "$BED_FILE"
+    echo "First 10 lines of normalized BED:"
+    head -n 10 regions.normal.bed
+
+    # --- quick checks of chromosome naming in the merged VCF header ---
+    echo "VCF header CHROM column (shows the #CHROM line):"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -h "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | grep '^#CHROM' -n -A1 || true
+
+    echo "Example chromosome names from VCF (unique, first 10):"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -H "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | awk -F'\t' '{print $1}' | sort -u | head -n 10
+
+    # --- variant counts before / after applying normalized BED ---
+    echo "Variant count BEFORE filtering:"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -H "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | wc -l
+
+    echo "Trying bcftools view -R with normalized BED (one-shot check):"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -H -R "/data/${PWD}/regions.normal.bed" "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | wc -l
+
+    echo "Applying BED filter using normalised $BED_FILE"
 
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        view -R "/data/${PWD}/${BED_FILE}" \
+        view -R "/data/${PWD}/regions.normal.bed" \
         -Oz -o "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" \
         "/data/${PWD}/${project_for_peddy}_merged.vcf.gz"
 
