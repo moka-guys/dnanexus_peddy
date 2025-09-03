@@ -213,8 +213,9 @@ if [[ -n "${regions_bed}" ]]; then
 
     echo "Showing first 20 variants BEFORE filtering (with GTs):"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%AF[\t%GT]\n' \
-        "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | head -n 20
+        query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT[\t%GT]\n' \
+        "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" \
+        | head -n 20 || true
 
     echo "Trying bcftools view -R with normalized BED (one-shot check):"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
@@ -233,8 +234,9 @@ if [[ -n "${regions_bed}" ]]; then
 
     echo "Showing first 20 variants AFTER filtering (with GTs):"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%AF[\t%GT]\n' \
-        "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" | head -n 20
+        query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT[\t%GT]\n' \
+        "/data/${PWD}/${merged_vcf}" \
+        | head -n 20 || true
 
     merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
 else
