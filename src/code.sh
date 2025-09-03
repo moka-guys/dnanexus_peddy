@@ -232,13 +232,14 @@ if [[ -n "${regions_bed}" ]]; then
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         index -t "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz"
 
+    merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
+
     echo "Showing first 20 variants AFTER filtering (with GTs):"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT[\t%GT]\n' \
         "/data/${PWD}/${merged_vcf}" \
         | head -n 20 || true
 
-    merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
 else
     echo "No BED file provided, running on full merged VCF."
     merged_vcf="${project_for_peddy}_merged.vcf.gz"
