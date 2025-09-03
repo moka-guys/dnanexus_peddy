@@ -211,12 +211,17 @@ if [[ -n "${regions_bed}" ]]; then
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         view -H "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | wc -l
 
+    echo "Showing first 20 variants BEFORE filtering:"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -H "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | grep -v '^#' | head -n 20
+
     echo "Trying bcftools view -R with normalized BED (one-shot check):"
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         view -H -R "/data/${PWD}/regions.normal.bed" "/data/${PWD}/${project_for_peddy}_merged.vcf.gz" | wc -l
 
     echo "Applying BED filter using normalised $BED_FILE"
 
+    # bcftools view to filter merged vcf 
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         view -R "/data/${PWD}/regions.normal.bed" \
         -Oz -o "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" \
@@ -224,6 +229,10 @@ if [[ -n "${regions_bed}" ]]; then
 
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         index -t "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz"
+
+    echo "Showing first 20 variants AFTER filtering:"
+    docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+        view -H "/data/${PWD}/${project_for_peddy}_merged.filtered.vcf.gz" | grep -v '^#' | head -n 20
 
     merged_vcf="${project_for_peddy}_merged.filtered.vcf.gz"
 else
