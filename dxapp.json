@@ -17,7 +17,7 @@
       "label": "project to get quality controlled by peddy",
       "help": "name of project to get processed by peddy",
       "class": "string"
-    },
+    }
   ],
   "outputSpec": [
     {
