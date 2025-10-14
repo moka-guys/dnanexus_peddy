@@ -189,7 +189,7 @@ dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
 
 # Use the safe filename
 PEDDY_DOCKER_IMAGE_FILE="ped_peddy.tar.gz"
-PEDDY_DOCKER_IMAGE_NAME=$(tar xfO "${PEDDY_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/')
+PEDDY_DOCKER_IMAGE_NAME=$(tar xfO "${PEDDY_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)".*/\1/')
 
 # Load the Docker image
 docker load < /home/dnanexus/"${PEDDY_DOCKER_IMAGE_FILE}"
