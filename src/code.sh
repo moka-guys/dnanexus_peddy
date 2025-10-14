@@ -245,20 +245,18 @@ else
     merged_vcf="${project_for_peddy}_merged.vcf.gz"
 fi
 
-############### Loading Docker image of Peddy ###############
+############### Loading in pre-built Docker image of Peddy ###############
 
-# Unpack the saved Docker image tarball into a .tar file
-gunzip -c /home/dnanexus/peddy_v1.6.tar.gz > /home/dnanexus/peddy_v1.6.tar
+# Download docker image, get tag and print
+PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J3g59Zj0jy1kfKVfFbP66K2Q
+dx download ${PEDDY_DOCKER_FILE_ID}
+
+PEDDY_DOCKER_IMAGE_FILE=$(dx describe ${PEDDY_DOCKER_FILE_ID} --name)
+PEDDY_DOCKER_IMAGE_NAME=$(tar xfO "${PEDDY_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/')
 
 # Load the Docker image
-PEDDY_DOCKER_IMAGE_NAME=$(
-    docker load < /home/dnanexus/peddy_v1.6.tar \
-    | grep "Loaded image:" \
-    | cut -d' ' -f3
-)
-
-# Remove the .tar to save space
-rm /home/dnanexus/peddy_v1.6.tar
+docker load < /home/dnanexus/"${PEDDY_DOCKER_IMAGE_FILE}"
+echo "Using docker image ${PEDDY_DOCKER_IMAGE_NAME}"
 
 # Run Peddy docker container using the merged & filtered VCF and the previously created ped/fam file.
 # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
