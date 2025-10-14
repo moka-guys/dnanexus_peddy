@@ -184,11 +184,11 @@ merge_vcfs "${project_for_peddy}"
 
 ############### Loading in pre-built Docker image of Peddy ###############
 
-# Download docker image, get tag and print
-PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J3g59Zj0jy1kfKVfFbP66K2Q
-dx download ${PEDDY_DOCKER_FILE_ID}
+# Download docker image with a safe local filename
+dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
 
-PEDDY_DOCKER_IMAGE_FILE=$(dx describe ${PEDDY_DOCKER_FILE_ID} --name)
+# Use the safe filename
+PEDDY_DOCKER_IMAGE_FILE="ped_peddy.tar.gz"
 PEDDY_DOCKER_IMAGE_NAME=$(tar xfO "${PEDDY_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/')
 
 # Load the Docker image
