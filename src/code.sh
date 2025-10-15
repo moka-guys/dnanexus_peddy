@@ -15,7 +15,7 @@ set -e -x -o pipefail
 ############### Loading in pre-built Docker image of Bcftools ###############
 
 # Download docker image, get tag and print
-BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-G55XqF00jy1QkJ174ZzZfzV5
+BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-GQB5qJ80jy1yF0209p0qv0ZJ
 dx download ${BCFTOOLS_DOCKER_FILE_ID}
 
 BCFTOOLS_DOCKER_IMAGE_FILE=$(dx describe ${BCFTOOLS_DOCKER_FILE_ID} --name)
