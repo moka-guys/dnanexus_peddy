@@ -1,13 +1,14 @@
 {
-  "name": "peddy_v1.5",
-  "title": "peddy_v1.5",
-  "summary": "v1.5 - Generates a run-wide QC performing a sex check and checking for duplicate samples",
+  "name": "peddy_v1.6",
+  "title": "peddy_v1.6",
+  "summary": "v1.6 - Generates a run-wide QC performing a sex check and checking for duplicate samples",
+  "description": "Generates a run-wide QC performing a sex check and checking for duplicate samples",
   "tags": [
     "QC",
     "Statistics"
   ],
   "properties": {
-    "github release": "v1.5"
+    "github release": "v1.6"
   },
   "dxapi": "1.0.0",
   "inputSpec": [
@@ -27,40 +28,23 @@
     }
   ],
   "runSpec": {
-    "dxapi": "1.0.0",
+    "version": "0",
+    "interpreter": "bash",
     "distribution": "Ubuntu",
-    "release": "14.04",
-    "execDepends": [],
-    "assetDepends": [
-      {
-        "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
-        "folder": "/Apps/Docker",
-        "name": "quay.io/biocontainers/bcftools:1.6--1",
-        "version": "0.0.1"
-      },
-      {
-        "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
-        "folder": "/Apps/Docker",
-        "name": "quay.io/biocontainers/peddy:0.3.1--py27_0",
-        "version": "0.0.1"
-      }
-    ],
-    "systemRequirementsByRegion": {
-      "aws:us-east-1": {
+    "release": "24.04",
+    "file": "src/code.sh"
+  },
+  "access": {
+    "allProjects": "VIEW"
+  },
+  "ignoreReuse": false,
+  "regionalOptions": {
+    "aws:us-east-1": {
+      "systemRequirements": {
         "main": {
           "instanceType": "mem1_ssd1_x2"
         }
       }
-    },
-    "systemRequirements": {
-      "main": {
-        "instanceType": "mem1_ssd1_x2"
-      }
-    },
-    "file": "src/code.sh",
-    "interpreter": "bash"
-  },
-  "access":{
-    "allProjects":"VIEW"
+    }
   }
 }

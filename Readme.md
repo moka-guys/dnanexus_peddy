@@ -1,7 +1,9 @@
-# dnanexus_peddy v 1.5
+# dnanexus_peddy v 1.6
 
 ## What does this app do?
-This app runs peddy v0.3.1 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.
+This app runs peddy v0.4.8 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.
+
+This app uses a customised Peddy docker image with a threshold set to fit sequencing data for our in-house custom panels. Link to Github release of docker image: https://github.com/moka-guys/seglh_peddy_docker/releases/tag/v1.0
 
 Peddy detects when the expected sex of a sample does not match the sex inferred from the sequence data. This works by measuring the ratio of heterozygous to homozygous genotypes in the X chromosome; As males have one X chromosome, they should have zero true heterozygous calls in the X chromosome, whereas females should have a mixture. This is reported via the  **sex/het ratio**, which is the count of heterozygous calls divided by the count of homozygous alternate calls. The sex/het ratio is **low for males, high for females**.
 
@@ -26,12 +28,12 @@ These files are output to the directory '/QC/'. Files in this directory are incl
 ## How does this app work?
 This app performs the following procedure:
 * Parse the file names to determine the expected sex for each sample and create a [fam file](https://www.cog-genomics.org/plink2/formats#fam) containing this information.
-* Download and merge the VCFs in the project's '/output/' folder.
+* Download and merge the VCFs in the project's '/output/' folder utilising bcftools. 
 * Run peddy, passing the merged VCF and fam file as arguments.
 * Upload outputs to the directories '/QC/' and '/QC/peddy' in the DNA Nexus project.
 
 ## What are the limitations of this app
 The project which peddy is run on must be shared with the user mokaguys.
-An valid authentication token must be present in the project 001_Authentication.
+A valid authentication token must be present in the project 001_Authentication.
 
-## This app was made by Viapath Genome Informatics
+## This app was made by Synnovis Clinical Bioinformatics 
