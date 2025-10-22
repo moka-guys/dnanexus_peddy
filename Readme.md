@@ -3,6 +3,8 @@
 ## What does this app do?
 This app runs peddy v0.4.8 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.
 
+This app uses a customised Peddy docker image with a threshold set to fit sequencing data for our in-house custom panels. Link to Github release of docker image: https://github.com/moka-guys/seglh_peddy_docker/releases/tag/v1.0
+
 Peddy detects when the expected sex of a sample does not match the sex inferred from the sequence data. This works by measuring the ratio of heterozygous to homozygous genotypes in the X chromosome; As males have one X chromosome, they should have zero true heterozygous calls in the X chromosome, whereas females should have a mixture. This is reported via the  **sex/het ratio**, which is the count of heterozygous calls divided by the count of homozygous alternate calls. The sex/het ratio is **low for males, high for females**.
 
 ## What are typical use cases for this app?

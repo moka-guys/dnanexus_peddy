@@ -150,6 +150,7 @@ function merge_vcfs {
     # The merged VCF is named using the first function argument (${1}, the DNA Nexus Project name)
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
+    # Use printf to rewrite host filepaths from the DNAnexus worker to their /data-mounted equvialent in Docker
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
         merge -O z -o "/data${PWD}/${1}_merged.vcf.gz" $(printf '/data%s ' "${PWD}"/*.vcf.gz)
 
