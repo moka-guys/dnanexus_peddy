@@ -15,13 +15,13 @@ set -e -x -o pipefail
 ############### Loading in pre-built Docker image of Bcftools ###############
 
 # Download docker image, get tag and print
-BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-G55XqF00jy1QkJ174ZzZfzV5
+BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-GQB5qJ80jy1yF0209p0qv0ZJ
 dx download ${BCFTOOLS_DOCKER_FILE_ID}
 
 BCFTOOLS_DOCKER_IMAGE_FILE=$(dx describe ${BCFTOOLS_DOCKER_FILE_ID} --name)
 BCFTOOLS_DOCKER_IMAGE_NAME=$(tar xfO "${BCFTOOLS_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/')
 
-# Call bcftools view (Bcftools v1.13). Docker image is a DNAnexus asset in 001_ToolsReferenceData in compressed
+# Call bcftools view (Bcftools v1.15). Docker image is a DNAnexus asset in 001_ToolsReferenceData in compressed
 # tarball format.
 docker load < /home/dnanexus/"${BCFTOOLS_DOCKER_IMAGE_FILE}"
 echo "Using docker image ${BCFTOOLS_DOCKER_IMAGE_NAME}"
@@ -68,7 +68,7 @@ function rename_vcf_header {
     # Write VCF filename to temp file.
     echo ${new_sample_name} > $tmp
 
-    # Use bcftools v1.6 docker container to rename the sample name in vcf header, using the sample name in the temp file.
+    # Use bcftools v1.15 docker container to rename the sample name in vcf header, using the sample name in the temp file.
     # By default `bcftools reheader` writes the edited VCF to the console, but here the result is
     # redirected to the file temp.$vcf_file.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
@@ -78,7 +78,7 @@ function rename_vcf_header {
     # Rename edited VCF using the name of the original VCF, deleting the original in the process.
     mv temp.$vcf_file $vcf_file
 
-    # Use bcftools v1.6 docker container to create an index for the updated vcf file which will be required by
+    # Use bcftools v1.15 docker container to create an index for the updated vcf file which will be required by
     # `bcftools merge`. The -t flag indexes the file using tabix.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" index -t /data/${PWD}/$vcf_file
@@ -183,22 +183,22 @@ batch_rename_vcf_header
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
 merge_vcfs "${project_for_peddy}"
 
-############### Loading Docker image of Peddy ###############
 
-# Unpack the saved Docker image tarball into a .tar file
-gunzip -c /home/dnanexus/peddy_v1.6.tar.gz > /home/dnanexus/peddy_v1.6.tar
+############### Loading in pre-built Docker image of Peddy ###############
+
+# Download docker image, get tag and print
+PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J3g59Zj0jy1kfKVfFbP66K2Q
+dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
+
+# Use the safe filename
+PEDDY_DOCKER_IMAGE_FILE="ped_peddy.tar.gz"
+PEDDY_DOCKER_IMAGE_NAME=$(tar xfO "${PEDDY_DOCKER_IMAGE_FILE}" manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)".*/\1/')
 
 # Load the Docker image
-PEDDY_DOCKER_IMAGE_NAME=$(
-    docker load < /home/dnanexus/peddy_v1.6.tar \
-    | grep "Loaded image:" \
-    | cut -d' ' -f3
-)
+docker load < /home/dnanexus/"${PEDDY_DOCKER_IMAGE_FILE}"
+echo "Using docker image ${PEDDY_DOCKER_IMAGE_NAME}"
 
-# Remove the .tar to save space
-rm /home/dnanexus/peddy_v1.6.tar
-
-# Run Peddy docker container using the merged VCF and the previously created ped/fam file.
+# Run Peddy docker container using the merged & filtered VCF and the previously created ped/fam file.
 # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
 docker run -v /home/dnanexus:/data "${PEDDY_DOCKER_IMAGE_NAME}" \
     peddy --plot -p 4 \
