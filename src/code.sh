@@ -46,6 +46,9 @@ function get_sample_name {
 }
 
 # Filter VCFs before Peddy; drop indels and low-quality SNPs
+# Defining the filtering expression for easier handling within the function
+PEDDY_FILTER_EXPR='((TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && INFO/AF == 0.5) || INFO/QD < 2.0 || INFO/MQ < 40 || INFO/ReadPosRankSum < -8.0)) || TYPE="indel" || (GT="het" && (FMT/AD[0] / FMT/DP < 0.25) && INFO/ReadPosRankSum < -4.0)))'
+
 function filter_vcfs_for_peddy {
     for vcf in *.vcf.gz; do
         [ -e "$vcf" ] || continue
@@ -56,13 +59,7 @@ function filter_vcfs_for_peddy {
 
         docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
             view \
-                -e '((TYPE="snp" && ((INFO/FS > 60) \
-                                     || ((INFO/SOR > 3) && INFO/AF == 0.5) \
-                                     || INFO/QD < 2.0 \
-                                     || INFO/MQ < 40 \
-                                     || INFO/ReadPosRankSum < -8.0)) \
-                      || TYPE="indel" \
-                      || (GT="het" && (FMT/AD[0] / FMT/DP < 0.25) && INFO/ReadPosRankSum < -4.0)))' \
+                -e "$PEDDY_FILTER_EXPR" \
                 -O z \
                 -o "/data${PWD}/${tmp_vcf}" \
                 "/data${PWD}/${vcf}"
