@@ -45,6 +45,27 @@ function get_sample_name {
     echo $vcf_file_cut
 }
 
+# Filter VCFs before Peddy; drop indels and low quality SNPs
+function filter_vcfs_for_peddy {
+    for vcf in *aplotyper.vcf.gz; do
+        local prefix=${vcf%.vcf.gz}
+        local filtered_vcf="${prefix}.peddyfiltered.vcf.gz"
+
+        echo "Filtering ${vcf} -> ${filtered_vcf}"
+
+        docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view /data/${PWD}/"${vcf}" \
+            -e '(TYPE="snp" && ((INFO/FS > 60) || (INFO/SOR > 3) && (INFO/AF == 0.5) || (INFO/QD < 2.0) || (INFO/MQ < 40) || (INFO/ReadPosRankSum < -8.0))) \
+                || (TYPE="indel") \
+                || ((GT="het") && ((AD[0:1] / FORMAT/DP) < 0.25) && (INFO/ReadPosRankSum < -4.0))' \
+            -O z -o /data/${PWD}/"${filtered_vcf}"
+
+        # Keep the original for debugging but make the filtered vcf the main vcf
+        mv "${vcf}" "${prefix}.raw.vcf.gz"
+        mv "${filtered_vcf}" "${vcf}" 
+    done
+}
+
 # Rename sample name in the vcf header to the filename (without extensions) using `bcftools reheader`.
 # This is required as VCFs produced by mokapipe pipeline have a default sample name of '1'.
 #
@@ -168,12 +189,11 @@ main(){
 API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
-# Look for bedfiltered vcfs 
-dx download $project_for_peddy:output/*aplotyper.bedfiltered.vcf.gz --auth $API_KEY
+# First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
+dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
 
-## Commenting out old download, which looked for *aplotyper.vcf.gz: 
-## First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
-## dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
+# Run function to filter each VCF
+filter_vcfs_for_peddy
 
 # Run functions to prepare files for input into peddy.
 # Create a single FAM file that describes the sex of all samples. Sex is read from VCF sample names,
