@@ -56,7 +56,13 @@ function filter_vcfs_for_peddy {
 
         docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
             view \
-                -e '(TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && (INFO/AF == 0.5)) || (INFO/QD < 2.0) || (INFO/MQ < 40) || (INFO/ReadPosRankSum < -8.0))) || (TYPE="indel") || ((GT="het") && ((AD[0:1] / FORMAT/DP) < 0.25) && (INFO/ReadPosRankSum < -4.0)))' \
+                -e '((TYPE="snp" && ((INFO/FS > 60) \
+                                     || ((INFO/SOR > 3) && INFO/AF == 0.5) \
+                                     || INFO/QD < 2.0 \
+                                     || INFO/MQ < 40 \
+                                     || INFO/ReadPosRankSum < -8.0)) \
+                      || TYPE="indel" \
+                      || (GT="het" && (FMT/AD[0] / FMT/DP < 0.25) && INFO/ReadPosRankSum < -4.0)))' \
                 -O z \
                 -o "/data${PWD}/${tmp_vcf}" \
                 "/data${PWD}/${vcf}"
@@ -64,8 +70,6 @@ function filter_vcfs_for_peddy {
         mv "${tmp_vcf}" "${vcf}"
     done
 }
-
-
 
 # Rename sample name in the vcf header to the filename (without extensions) using `bcftools reheader`.
 # This is required as VCFs produced by mokapipe pipeline have a default sample name of '1'.
