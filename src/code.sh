@@ -45,24 +45,28 @@ function get_sample_name {
     echo $vcf_file_cut
 }
 
-# Filter VCFs before Peddy; drop indels and low quality SNPs
+# Filter VCFs before Peddy; drop indels and low-quality SNPs
 function filter_vcfs_for_peddy {
-    for vcf in *aplotyper.vcf.gz; do
-        local prefix=${vcf%.vcf.gz}
-        local filtered_vcf="${prefix}.peddyfiltered.vcf.gz"
+    for vcf in *.vcf.gz; do
+        # If the glob doesn't match anything, bash will leave it as literal "*.vcf.gz"
+        # so skip if there's no real file
+        [ -e "$vcf" ] || continue
 
-        echo "Filtering ${vcf} -> ${filtered_vcf}"
+        local tmp_vcf="temp.${vcf}"
+
+        echo "Filtering ${vcf} -> ${tmp_vcf}"
 
         docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-            view /data/${PWD}/"${vcf}" \
-            -e '(TYPE="snp" && ((INFO/FS > 60) || (INFO/SOR > 3) && (INFO/AF == 0.5) || (INFO/QD < 2.0) || (INFO/MQ < 40) || (INFO/ReadPosRankSum < -8.0))) \
-                || (TYPE="indel") \
-                || ((GT="het") && ((AD[0:1] / FORMAT/DP) < 0.25) && (INFO/ReadPosRankSum < -4.0))' \
-            -O z -o /data/${PWD}/"${filtered_vcf}"
+            view \
+                -e '(TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && (INFO/AF == 0.5)) || (INFO/QD < 2.0) || (INFO/MQ < 40) || (INFO/ReadPosRankSum < -8.0))) \
+                    || (TYPE="indel") \
+                    || ((GT="het") && ((AD[0:1] / FORMAT/DP) < 0.25) && (INFO/ReadPosRankSum < -4.0))' \
+                -O z \
+                -o /data/${PWD}/"${tmp_vcf}" \
+                /data/${PWD}/"${vcf}"
 
-        # Keep the original for debugging but make the filtered vcf the main vcf
-        mv "${vcf}" "${prefix}.raw.vcf.gz"
-        mv "${filtered_vcf}" "${vcf}" 
+        # Overwrite original with filtered version
+        mv "${tmp_vcf}" "${vcf}"
     done
 }
 
