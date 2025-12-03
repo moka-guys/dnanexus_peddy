@@ -47,7 +47,7 @@ function get_sample_name {
 
 # Filter VCFs before Peddy; drop indels and low-quality SNPs
 # Defining the filtering expression for easier handling within the function
-PEDDY_FILTER_EXPR='TYPE="indel" || (TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && INFO/AF == 0.5) || INFO/QD < 2.0 || INFO/MQ < 40 || INFO/ReadPosRankSum < -8.0))'
+PEDDY_FILTER_EXPR='TYPE="indel" || (TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && INFO/AF == 0.5) || INFO/QD < 2.0 || INFO/MQ < 40 || INFO/ReadPosRankSum < -8.0)) || (GT="het" && (FMT/AD[0:1] / FMT/DP[0] < 0.25) && INFO/ReadPosRankSum < -4.0)'
 
 function filter_vcfs_for_peddy {
     for vcf in *.vcf.gz; do
