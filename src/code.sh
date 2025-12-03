@@ -49,14 +49,42 @@ function get_sample_name {
 # Defining the filtering expression for easier handling within the function
 PEDDY_FILTER_EXPR='TYPE="indel" || (TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && INFO/AF == 0.5) || INFO/QD < 2.0 || INFO/MQ < 40 || INFO/ReadPosRankSum < -8.0)) || (GT="het" && (FMT/AD[0:1] / FMT/DP[0] < 0.25) && INFO/ReadPosRankSum < -4.0)'
 
+# function filter_vcfs_for_peddy {
+#     for vcf in *.vcf.gz; do
+#         [ -e "$vcf" ] || continue
+
+#         local tmp_vcf="temp.${vcf}"
+
+#         echo "Filtering ${vcf} -> ${tmp_vcf}"
+
+#         docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+#             view \
+#                 -e "$PEDDY_FILTER_EXPR" \
+#                 -O z \
+#                 -o "/data${PWD}/${tmp_vcf}" \
+#                 "/data${PWD}/${vcf}"
+
+#         mv "${tmp_vcf}" "${vcf}"
+#     done
+# }
+
+# Filter VCFs before Peddy; log counts and keep removed variants
 function filter_vcfs_for_peddy {
     for vcf in *.vcf.gz; do
         [ -e "$vcf" ] || continue
 
+        local prefix=${vcf%.vcf.gz}
         local tmp_vcf="temp.${vcf}"
+        local removed_vcf="${prefix}.removed_by_filter.vcf.gz"
 
         echo "Filtering ${vcf} -> ${tmp_vcf}"
 
+        # 1) Count variants in original VCF
+        RAW_COUNT=$(docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view -H "/data${PWD}/${vcf}" | wc -l)
+        echo "Original variant count for ${vcf}: ${RAW_COUNT}"
+
+        # 2) Apply filter -> temp filtered VCF
         docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
             view \
                 -e "$PEDDY_FILTER_EXPR" \
@@ -64,9 +92,45 @@ function filter_vcfs_for_peddy {
                 -o "/data${PWD}/${tmp_vcf}" \
                 "/data${PWD}/${vcf}"
 
+        docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            index -t "/data${PWD}/${tmp_vcf}"
+
+        # 3) Count variants in filtered VCF
+        FILTERED_COUNT=$(docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view -H "/data${PWD}/${tmp_vcf}" | wc -l)
+        echo "Filtered variant count for ${vcf}: ${FILTERED_COUNT}"
+
+        # 4) Create VCF of removed variants (those matching the filter)
+        docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view \
+                -i "$PEDDY_FILTER_EXPR" \
+                -O z \
+                -o "/data${PWD}/${removed_vcf}" \
+                "/data${PWD}/${vcf}"
+
+        docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            index -t "/data${PWD}/${removed_vcf}"
+
+        REMOVED_COUNT=$(docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view -H "/data${PWD}/${removed_vcf}" | wc -l)
+        echo "Removed variant count for ${vcf}: ${REMOVED_COUNT}"
+
+        # 5) Sanity check: raw - filtered == removed
+        DIFF=$(( RAW_COUNT - FILTERED_COUNT ))
+        echo "Check for ${vcf}: RAW - FILTERED = ${DIFF}, REMOVED = ${REMOVED_COUNT}"
+
+        if [[ "$DIFF" -ne "$REMOVED_COUNT" ]]; then
+            echo "WARNING: count mismatch for ${vcf}"
+        else
+            echo "Counts match for ${vcf}"
+        fi
+
+        # Overwrite original VCF with filtered one for downstream steps
         mv "${tmp_vcf}" "${vcf}"
     done
 }
+
+
 
 # Rename sample name in the vcf header to the filename (without extensions) using `bcftools reheader`.
 # This is required as VCFs produced by mokapipe pipeline have a default sample name of '1'.
