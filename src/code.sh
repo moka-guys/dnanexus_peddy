@@ -70,12 +70,14 @@ PEDDY_FILTER_EXPR='TYPE="indel" || (TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR 
 
 # Filter VCFs before Peddy; log counts and keep removed variants
 function filter_vcfs_for_peddy {
+    mkdir -p removed_by_filter
+
     for vcf in *.vcf.gz; do
         [ -e "$vcf" ] || continue
 
         local prefix=${vcf%.vcf.gz}
         local tmp_vcf="temp.${vcf}"
-        local removed_vcf="${prefix}.removed_by_filter.vcf.gz"
+        local removed_vcf="removed_by_filter/${prefix}.removed_by_filter.vcf.gz"
 
         echo "Filtering ${vcf} -> ${tmp_vcf}"
 
@@ -115,7 +117,7 @@ function filter_vcfs_for_peddy {
             view -H "/data${PWD}/${removed_vcf}" | wc -l)
         echo "Removed variant count for ${vcf}: ${REMOVED_COUNT}"
 
-        # 5) Sanity check: raw - filtered == removed
+        # 5) Sanity check
         DIFF=$(( RAW_COUNT - FILTERED_COUNT ))
         echo "Check for ${vcf}: RAW - FILTERED = ${DIFF}, REMOVED = ${REMOVED_COUNT}"
 
@@ -129,6 +131,7 @@ function filter_vcfs_for_peddy {
         mv "${tmp_vcf}" "${vcf}"
     done
 }
+
 
 
 
@@ -260,6 +263,13 @@ dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx do
 
 # Run function to filter each VCF
 filter_vcfs_for_peddy
+
+#--------------------------------------------------------------
+# Move removed-by-filter VCFs into output tree
+mkdir -p $HOME/out/peddy/removed_by_filter
+mv removed_by_filter/* $HOME/out/peddy/removed_by_filter/
+#--------------------------------------------------------------
+
 
 # Run functions to prepare files for input into peddy.
 # Create a single FAM file that describes the sex of all samples. Sex is read from VCF sample names,
