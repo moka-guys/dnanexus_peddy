@@ -45,6 +45,52 @@ function get_sample_name {
     echo $vcf_file_cut
 }
 
+# Filter VCFs before Peddy; drop indels and low-quality SNPs
+# Defining the filtering expression for easier handling within the function
+# TYPE="indel"              | Filter out all INDELs. 
+# TYPE="snp" && (...)       | Everything else applies to filtering out poor quality SNPs. 
+# INFO/FS > 60              | FisherStrand bias. Filter SNPS with FS > 60 as unreliable.
+# ((INFO/SOR >3) && ..      | StrandOddsRatio. Altenrative strand bias metric, filter > 3. 
+# INFO/AF == 0.5)           | AlleleFrequency. Specifically excluding strong strand bias SNPs with AF 0.5.
+# INFO/QD < 2.0             | QualByDepth. Measures variance confidence normalised by depth.  
+# INFO/MQ < 40              | RMSMappingQuality. Filters out poorly mapped reads which are often artefacts. 
+# INFO/ReadPosRankSum < -8.0| ReadPosRankSum is a Mann-Whitney rank sum test comparing where in the read REF vs ALT alleles tend to appear
+#                           | Strongly  negative values mean the ALT allele is biased towards the read ends, which could be errors. 
+# GT="het" && ..            | The next part only applies to heterozygous calls. 
+# FMT/AD[0:1] /             |
+#   FMTDP[0] < 0.25         | For each ALT allele divided by the total depth, if it is supported by less than 25% of the reads, disregard it. 
+# INFO/ReadPosRankSum < -4.0| Same as above; Removes hets with any large positional bias but more stringent than for non-hets 
+PEDDY_FILTER_EXPR='TYPE="indel" || (TYPE="snp" && ((INFO/FS > 60) || ((INFO/SOR > 3) && INFO/AF == 0.5) || INFO/QD < 2.0 || INFO/MQ < 40 || INFO/ReadPosRankSum < -8.0)) || (GT="het" && (FMT/AD[0:1] / FMT/DP[0] < 0.25) && INFO/ReadPosRankSum < -4.0)'
+
+# Applies a bcftools filter to each *.vcf.gz file and overwrites the file with the filtered version 
+function filter_vcfs_for_peddy {
+    # Loop over the bgzipped VCF files in the current working directory
+    for vcf in *.vcf.gz; do
+
+        # Safety check: if *.vcf.gz doesn't match anything, the loop body will be skipped 
+        # Prevents attempting to filter a non-existent file 
+        [ -e "$vcf" ] || continue
+
+        # Define a temporary output filename for the filtered VCF while bcftools runs 
+        local tmp_vcf="temp.${vcf}"
+
+        # Log which file is being processed and what the temporary output name is 
+        echo "Filtering ${vcf} -> ${tmp_vcf}"
+
+        # Mount the DNAnexus worker filesystem at /data inside the container with -v /:/data
+        # -e argument defines what criteria variants will be excluded upon. Filter expression defined above
+        docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
+            view \
+                -e "$PEDDY_FILTER_EXPR" \
+                -O z \
+                -o "/data${PWD}/${tmp_vcf}" \
+                "/data${PWD}/${vcf}"
+
+        # Replace the temporary vcf with the filtered version, keeping filenaming stable for downstream functions
+        mv "${tmp_vcf}" "${vcf}"
+    done
+}
+
 # Rename sample name in the vcf header to the filename (without extensions) using `bcftools reheader`.
 # This is required as VCFs produced by mokapipe pipeline have a default sample name of '1'.
 #
@@ -150,9 +196,10 @@ function merge_vcfs {
     # The merged VCF is named using the first function argument (${1}, the DNA Nexus Project name)
     # with the suffix '_merged.vcf.gz'.
     # -v /:/data mounts the root of the dnanexus worker to /data within the docker container to allow file access
-    # Use printf to rewrite host filepaths from the DNAnexus worker to their /data-mounted equvialent in Docker
+    # -0 argument in bcftools merge ensures that Peddy does not dismiss variants which are found in one sample
+    # but not another, which are treated as ambiguous calls in the merged vcf (./.) and not handled by Peddy 
     docker run -v /:/data "${BCFTOOLS_DOCKER_IMAGE_NAME}" \
-        merge -O z -o "/data${PWD}/${1}_merged.vcf.gz" $(printf '/data%s ' "${PWD}"/*.vcf.gz)
+        merge -m all -O z -o "/data${PWD}/${1}_merged.vcf.gz" -0 $(printf '/data%s ' "${PWD}"/*.vcf.gz)
 
     # Use bcftools v1.6 docker container to create an index of the merged VCF file, which is required by Peddy.
     # The -t flag indexes the file using tabix.
@@ -170,6 +217,9 @@ API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
 # First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
 dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
 
+# Run function to filter each VCF by filtering criteria established in PEDDY_FILTER_EXPR
+filter_vcfs_for_peddy
+
 # Run functions to prepare files for input into peddy.
 # Create a single FAM file that describes the sex of all samples. Sex is read from VCF sample names,
 # as '_M_' (male), '_F_' (female) or 'Unknown' if not found.
@@ -186,7 +236,7 @@ merge_vcfs "${project_for_peddy}"
 ############### Loading in pre-built Docker image of Peddy ###############
 
 # Download docker image, get tag and print
-PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J3g59Zj0jy1kfKVfFbP66K2Q
+PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J4xP7p80jy1bgkqfbj00bvg6
 dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
 
 # Use the safe filename
