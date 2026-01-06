@@ -14,7 +14,7 @@
   "inputSpec": [
     {
       "name": "project_ID_for_peddy",
-      "label": "project to get quality controlled by peddy",
+      "label": "DNAnexus Project ID (e.g. project-xxxx) for Peddy analysis",
       "help": "DNAnexus project ID (e.g. project-xxx) containing VCFs to be processed",
       "class": "string"
     }
