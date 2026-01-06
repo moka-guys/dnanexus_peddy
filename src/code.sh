@@ -211,7 +211,7 @@ function merge_vcfs {
 
 main(){
 # Read the api key as a variable
-API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
+API_KEY=$(dx cat project-J343FKBKJqkzp6qk6f6BYXB8:file-J343ZbXKJqkk7jYp0gxkZk7b)
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
 # First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
