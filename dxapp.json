@@ -13,9 +13,9 @@
   "dxapi": "1.0.0",
   "inputSpec": [
     {
-      "name": "project_for_peddy",
+      "name": "project_ID_for_peddy",
       "label": "project to get quality controlled by peddy",
-      "help": "name of project to get processed by peddy",
+      "help": "DNAnexus project ID (e.g. project-xxx) containing VCFs to be processed",
       "class": "string"
     }
   ],
