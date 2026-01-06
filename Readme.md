@@ -1,4 +1,4 @@
-# dnanexus_peddy v 2.0
+# dnanexus_peddy v 2.1
 
 ## What does this app do?
 This app runs peddy v0.4.8 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.
@@ -7,13 +7,15 @@ This app also filters out indels and poor quality SNPs from input VCFs before pe
 
 This app uses a customised Peddy docker image available at: https://github.com/moka-guys/seglh_peddy_docker/
 
+Version 2.1 of this app was designed specifically for use with DNAnexus London AWS servers (EU-West-2).
+
 Peddy detects when the expected sex of a sample does not match the sex inferred from the sequence data. This works by measuring the ratio of heterozygous to homozygous genotypes in the X chromosome; As males have one X chromosome, they should have zero true heterozygous calls in the X chromosome, whereas females should have a mixture. This is reported via the  **sex/het ratio**, which is the count of heterozygous calls divided by the count of homozygous alternate calls. The sex/het ratio is **low for males, high for females**.
 
 ## What are typical use cases for this app?
 The app should be run after workflows for all samples in a run complete succesfully. The peddy output files are processed by multiqc >v1.3, which displays peddy data in the resulting report. This app is scheduled to run by the DNA Nexus upload agent script using the --depends-on flag.
 
 ## What data are required for this app to run?
-- A project number is passed to the app as a parameter.
+- The DNAnexus project ID is passed to the app as a parameter.
 - The given project must have an 'output' folder containing VCFs to be processed by peddy. 
 - More than one vcf with the extension '.refined.vcf.gz' or 'aplotyper.vcf.gz' is required.
 - The filename of each sample must include the gender as 'M' or 'F' deliminated by underscores.
