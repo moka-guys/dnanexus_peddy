@@ -13,7 +13,7 @@
 set -e -x -o pipefail
 
 # DNAnexus setup
-PROJECT_ID="project_ID_for_peddy"
+PROJECT_ID="$project_ID_for_peddy"
 PROJECT_NAME="$(dx describe "$PROJECT_ID" --name)"
 
 echo "Using project for Peddy input:"
