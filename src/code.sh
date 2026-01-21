@@ -12,10 +12,18 @@
 # and to output each line as it is executed -- useful for debugging
 set -e -x -o pipefail
 
+# DNAnexus setup
+PROJECT_ID="$project_ID_for_peddy"
+PROJECT_NAME="$(dx describe "$PROJECT_ID" --name)"
+
+echo "Using project for Peddy input:"
+echo "  Project ID:     $PROJECT_ID"
+echo "  Project Name:   $PROJECT_NAME"
+
 ############### Loading in pre-built Docker image of Bcftools ###############
 
 # Download docker image, get tag and print
-BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-GQB5qJ80jy1yF0209p0qv0ZJ
+BCFTOOLS_DOCKER_FILE_ID=project-J32193pK9yGfjP2GyZ94KZf4:file-J342zqBK9yGzfV63XBqkz0b1
 dx download ${BCFTOOLS_DOCKER_FILE_ID}
 
 BCFTOOLS_DOCKER_IMAGE_FILE=$(dx describe ${BCFTOOLS_DOCKER_FILE_ID} --name)
@@ -145,7 +153,7 @@ function batch_rename_vcf_header {
 # Note: Father_ID, Mother_ID, or Sex of 0 = Unknown. Individual_ID cannot be 0.
 function create_fam_file {
     # Set string with FAM file name using project folder title
-    fam_file="ped.${project_for_peddy}.fam"
+    fam_file="ped.${PROJECT_NAME}.fam"
     # Create empty fam file to write to.
     touch $fam_file
     # Set a counter to use as the family ID. This will correspond with the line number for each record.
@@ -211,11 +219,11 @@ function merge_vcfs {
 
 main(){
 # Read the api key as a variable
-API_KEY=$(dx cat project-FQqXfYQ0Z0gqx7XG9Z2b4K43:mokaguys_nexus_auth_key)
+API_KEY=$(dx cat project-J343FKBKJqkzp6qk6f6BYXB8:file-J343ZbXKJqkk7jYp0gxkZk7b)
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
 # First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
-dx download $project_for_peddy:output/*aplotyper.vcf.gz --auth $API_KEY || dx download $project_for_peddy:output/*.refined.vcf.gz --auth $API_KEY
+dx download ${PROJECT_ID}:output/*aplotyper.vcf.gz --auth $API_KEY || dx download ${PROJECT_ID}:output/*.refined.vcf.gz --auth $API_KEY
 
 # Run function to filter each VCF by filtering criteria established in PEDDY_FILTER_EXPR
 filter_vcfs_for_peddy
@@ -230,13 +238,13 @@ create_fam_file
 batch_rename_vcf_header
 
 # Create a single merged vcf from each VCF file, supplying the project name for use as a prefix.
-merge_vcfs "${project_for_peddy}"
+merge_vcfs "${PROJECT_NAME}"
 
 
 ############### Loading in pre-built Docker image of Peddy ###############
 
 # Download docker image, get tag and print
-PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J4xP7p80jy1bgkqfbj00bvg6
+PEDDY_DOCKER_FILE_ID=project-J32193pK9yGfjP2GyZ94KZf4:file-J5KPXKpK9yGZvFV8521QVb28
 dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
 
 # Use the safe filename
@@ -252,7 +260,7 @@ echo "Using docker image ${PEDDY_DOCKER_IMAGE_NAME}"
 docker run -v /home/dnanexus:/data "${PEDDY_DOCKER_IMAGE_NAME}" \
     peddy --plot -p 4 \
     --prefix /data/ped \
-    /data/${project_for_peddy}_merged.vcf.gz \
+    /data/${PROJECT_NAME}_merged.vcf.gz \
     /data/${fam_file}
 
 # Create directories for app outputs to be uploaded to dna nexus.
