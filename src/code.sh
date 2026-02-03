@@ -23,7 +23,7 @@ echo "  Project Name:   $PROJECT_NAME"
 ############### Loading in pre-built Docker image of Bcftools ###############
 
 # Download docker image, get tag and print
-BCFTOOLS_DOCKER_FILE_ID=project-J32193pK9yGfjP2GyZ94KZf4:file-J342zqBK9yGzfV63XBqkz0b1
+BCFTOOLS_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-GQB5qJ80jy1yF0209p0qv0ZJ
 dx download ${BCFTOOLS_DOCKER_FILE_ID}
 
 BCFTOOLS_DOCKER_IMAGE_FILE=$(dx describe ${BCFTOOLS_DOCKER_FILE_ID} --name)
@@ -244,7 +244,7 @@ merge_vcfs "${PROJECT_NAME}"
 ############### Loading in pre-built Docker image of Peddy ###############
 
 # Download docker image, get tag and print
-PEDDY_DOCKER_FILE_ID=project-J32193pK9yGfjP2GyZ94KZf4:file-J5KPXKpK9yGZvFV8521QVb28
+PEDDY_DOCKER_FILE_ID=project-ByfFPz00jy1fk6PjpZ95F27J:file-J4xP7p80jy1bgkqfbj00bvg6
 dx download ${PEDDY_DOCKER_FILE_ID} -o ped_peddy.tar.gz
 
 # Use the safe filename
