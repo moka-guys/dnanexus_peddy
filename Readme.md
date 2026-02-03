@@ -1,4 +1,4 @@
-# dnanexus_peddy v 2.1
+# dnanexus_peddy v 2.2
 
 ## What does this app do?
 This app runs peddy v0.4.8 (https://github.com/brentp/peddy) to perform a run wide QC check that the assigned gender matches the sample.
@@ -6,8 +6,9 @@ This app runs peddy v0.4.8 (https://github.com/brentp/peddy) to perform a run wi
 This app also filters out indels and poor quality SNPs from input VCFs before performing the peddy sex check.
 
 This app uses a customised Peddy docker image available at: https://github.com/moka-guys/seglh_peddy_docker/
+The version of the Docker image repository in use with this app is v2.0. 
 
-Version 2.1 of this app was designed specifically for use with DNAnexus London AWS servers (EU-West-2).
+Version 2.2 of this app was designed specifically for use with DNAnexus US-East servers (us-east-1). For compatibility with London AWS Servers, please use v2.1. 
 
 Peddy detects when the expected sex of a sample does not match the sex inferred from the sequence data. This works by measuring the ratio of heterozygous to homozygous genotypes in the X chromosome; As males have one X chromosome, they should have zero true heterozygous calls in the X chromosome, whereas females should have a mixture. This is reported via the  **sex/het ratio**, which is the count of heterozygous calls divided by the count of homozygous alternate calls. The sex/het ratio is **low for males, high for females**.
 
