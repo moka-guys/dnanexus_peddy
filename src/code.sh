@@ -166,16 +166,16 @@ function create_fam_file {
         #
         # The filename is piped to the `sed` substitution command, which has the syntax
         # 's/regular_expression/substitution_string/modifier'.
-        # The regular expression used is .*_\([M,F])\)_.* and can be translated as follows:
+        # The regular expression used is .*[_-]\([MF]\)[_-].* and can be translated as follows:
         #   Search the filename for an M or F character using '[]'. The character must be flanked by
-        #   underscores which can then be preceeded or followed by any number of any character
-        #   ('.*_' and '_.*' ). Use escaped parthenses '\(' and '\)' to capture the M or F character.
+        #   underscores or hyphens which can then be preceeded or followed by any number of any character.
+        #   Use escaped parthenses '\(' and '\)' to capture the M or F character.
         # The entire input filename string is then substituted for the captured character using the
         # backreference syntax (\1). Finally, the modifier 'p' instructs `sed` to print out the
         # subsituted string, which is assigned to $sex.
         #
         # If no sample sex string is found, the $sex variable is empty and sample sex is set to 'Unknown'.
-        sex=$(echo $file | sed -n 's/.*_\([M,F]\)_.*/\1/p')
+        sex=$(echo $file | sed -n 's/.*[_-]\([MF]\)[_-].*/\1/p')
 
         # Convert $sex to the sex code used by peddy. Sex code '1' = male, '2' =female and '0' = unknown.
         if [[ $sex == "M" ]]; then
@@ -219,7 +219,8 @@ function merge_vcfs {
 
 main(){
 # Read the api key as a variable
-API_KEY=$(dx cat project-J343FKBKJqkzp6qk6f6BYXB8:file-J343ZbXKJqkk7jYp0gxkZk7b)
+API_KEY_wquotes=$(echo $DX_SECURITY_CONTEXT |  jq '.auth_token')
+API_KEY=$(echo "$API_KEY_wquotes" | sed 's/"//g')
 
 # Download the desired inputs. Use the input $project_for_peddy to build the path to look in.
 # First try to download files named *aplotyper.vcf.gz (mokawes > v1.7) - if this fails then look for refined.vcf.gz (Mokawes <1.7) 
